@@ -83,6 +83,12 @@ class BiopaxProcessor(object):
         for s in stmts:
             self.statements.append(Palmitoylation(*s))
 
+    def get_ubiquitination(self, force_contains=None):
+        stmts = self._get_generic_modification('ubiquitin', 
+                                               force_contains=force_contains)
+        for s in stmts:
+            self.statements.append(Palmitoylation(*s))
+
     def get_activity_modification(self, force_contains=None):
         mcc = bpp('constraint.ModificationChangeConstraint')
         mcct = bpp('constraint.ModificationChangeConstraint$Type')
@@ -234,7 +240,8 @@ class BiopaxProcessor(object):
                 continue
             cat_dir = control.getCatalysisDirection()
             if cat_dir is not None and cat_dir.name() != 'LEFT_TO_RIGHT':
-                warnings.warn('Unexpected catalysis direction: %s.' % control.getCatalysisDirection())
+                warnings.warn('Unexpected catalysis direction: %s.' %\
+                    control.getCatalysisDirection())
                 continue
             if is_complex(controller_pe):
                 # Identifying the "real" enzyme in a complex may not always be
@@ -243,17 +250,8 @@ class BiopaxProcessor(object):
                 # active and if it is the only active member then
                 # set this as the enzyme to which all other members of the
                 # complex are bound.
-                warnings.warn('Cannot handle complex enzymes.')
+                #warnings.warn('Cannot handle complex enzymes.')
                 continue
-            if is_complex(input_pe):
-                # It is possible to find which member of the complex is 
-                # actually modified. That member will be the substrate and 
-                # all other members of the complex will be bound to it.
-                warnings.warn('Cannot handle complex substrates.')
-                continue
-            # TODO: should this be the citation for the control?
-            # Sometimes there is an xref within Catalysis which refers to 
-            # a pubmed article in a bp:PublicationXref tag.
             citations = BiopaxProcessor._get_citations(control)
             source_id = control.getUri()
             if not citations:
@@ -267,8 +265,51 @@ class BiopaxProcessor(object):
                       for cit in citations]
 
             enzs = BiopaxProcessor._get_agents_from_entity(controller_pe)
-            subs = BiopaxProcessor._get_agents_from_entity(input_spe,
-                                                           expand_pe=False)
+            if not is_complex(input_pe):
+                # For the substrate we don't expand the PE because it 
+                # is already iterated over by the path query
+                subs = BiopaxProcessor._get_agents_from_entity(
+                            input_spe, expand_pe=False)
+            else:
+                members = self._get_complex_members(input_pe)
+                if members is not None:
+                    if len(members) > 10:
+                        print 'Skipping complex substrate'+\
+                               'with more than 10 members.'
+                        continue
+                else:
+                    # Complex has no members
+                    continue
+
+                sub_complexes = get_combinations(members)
+                subs = []
+                for sc in sub_complexes:
+                    # We recreate these for each complex combination.
+                    # this could also be solved by duplicating (deep copy)
+                    # agents created outside the loop. We have to be careful
+                    # that the Agent object in each version of the complex
+                    # is different though.
+                    sub_spes =\
+                        BiopaxProcessor._get_agents_from_entity(input_spe)
+                    sc_uris = [s.db_refs['PC'] for s in sc]
+                    for sub in listify(sub_spes):
+                        # The URI of the modified entity
+                        mod_uri = sub.db_refs['PC']
+                        if mod_uri not in sc_uris:
+                            # This is a complex combination that doesn't
+                            # include this specific entity
+                            continue
+                        for su, ss in zip(sc_uris, sc):
+                            if su != mod_uri:
+                                bc = BoundCondition(ss, True)
+                                sub.bound_conditions.append(bc)
+                        subs.append(sub)
+
+                # It is possible to find which member of the complex is 
+                # actually modified. That member will be the substrate and 
+                # all other members of the complex will be bound to it.
+                # warnings.warn('Cannot handle complex substrates.')
+
             for enz, sub in itertools.product(listify(enzs), listify(subs)):
                 # If neither the required enzyme nor the substrate is 
                 # present then skip
@@ -310,7 +351,6 @@ class BiopaxProcessor(object):
     @staticmethod
     def _get_evidence(bpe):
         ev = bpe.getEvidence().toArray()
-        print ev
         for e in ev:
             xrefs =  e.getXref().toArray()
             # There are also evidence codes that we could extract.
@@ -467,6 +507,7 @@ class BiopaxProcessor(object):
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
             if uniprot_id is not None:
                 db_refs['UP'] = uniprot_id
+        db_refs['PC'] = bpe.getUri()
         return db_refs
 
     @staticmethod
@@ -486,7 +527,6 @@ class BiopaxProcessor(object):
         else:
             warnings.warn('Unhandled entity type %s' %
                 bpe.getModelInterface().getName())
-            import ipdb; ipdb.set_trace()
             name = bpe.getDisplayName()
 
         # Canonicalize name

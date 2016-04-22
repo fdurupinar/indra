@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+    <head>
+        <style>
+        body {
+            background-color: linen;
+            }
+        .trips_process {
+            vertical-align: center;
+            }
+        .trips_textarea {
+            vertical-align: top;
+            width: 200px;
+            height: 100px;
+            }
+        .statements_list {
+            vertical-align: top;
+            width: 200px;
+            height: 100px;
+            }
+        .pysb_div {
+            vertical-align: top;
+            width: 300px;
+            height: 400px;
+            }
+        </style>
+    </head>
+<body>
+<h1>INDRA Web interface</h1>
+<form action="" method="POST" name="indra_form">
+{{ form.trips_input(class_="trips_textarea") }}
+<input type="submit" class='trips_process' value="Statements >"></input>
+{{ form.statements_list(class_="statements_list") }}
+<input type="submit" class='trips_process' value="PySB >"></input>
+<textarea class="pysb_div">
+{%- if pysb_model %}
+{{ pysb_model }}
+{%- else %}
+Result goes here
+{%- endif %}
+    </textarea>
+</form>
+
+</body>
+</html>

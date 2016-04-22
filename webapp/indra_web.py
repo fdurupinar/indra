@@ -4,6 +4,9 @@ from flask import Flask, render_template, request
 from wtforms import Form
 from wtforms.fields import StringField, SelectMultipleField
 from wtforms.widgets import TextArea
+
+from indra.statements import *
+
 app = Flask(__name__)
 
 class IndraForm(Form):
@@ -21,29 +24,42 @@ def get_pysb_model(stmts):
         return 'Blank model'
 
 def get_statements(txt):
+    stmts = [Complex([Agent('A'), Agent('B')]), Complex([Agent('C'), Agent('D')])]
+    return stmts
+
     tp = trips_api.process_text(txt)
     if tp is not None:
         return tp.statements
     else:
         return None
 
+stmts = []
+txt = ''
+
 @app.route("/", methods=['POST', 'GET'])
 def run():
     form = IndraForm(request.form)
+    stmts = []
+    pysb_model = ''
     if request.method == 'POST':
+        stmts = form.statements_list.choices
         print request.__dict__
-        txt = form.trips_input.data
-        if txt:
-            stmts = get_statements(txt)
-            stmt_list = [(str(i), str(stmts[i])) for i in range(len(stmts))]
+        button = request.form.get('form_button')
+        if button == 'stmt':
+            txt = form.trips_input.data
+            if txt:
+                stmts = get_statements(txt)
+                stmt_list = [(str(i), str(stmts[i])) for i in range(len(stmts))]
+            else:
+                stmts = []
             form.statements_list.choices = stmt_list
+        elif button == 'pysba':
+            print  form.statements_list.__dict__
             pysb_model = get_pysb_model(stmts)
+            # pysb_model = 'No input text'
         else:
             stmts = None
-            pysb_model = 'No input text'
-    else:
-        stmts = None
-        pysb_model = 'Let\'s start!'
+            pysb_model = ''
     args = {'form': form,
             'statements': stmts,
             'pysb_model': pysb_model}

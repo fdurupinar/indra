@@ -29,9 +29,9 @@
 <h1>INDRA Web interface</h1>
 <form action="" method="POST" name="indra_form">
 {{ form.trips_input(class_="trips_textarea") }}
-<input type="submit" class='trips_process' value="Statements >"></input>
+<button type="submit" class='trips_process' name="form_button" value="stmt">Statements ></button>
 {{ form.statements_list(class_="statements_list") }}
-<input type="submit" class='trips_process' value="PySB >"></input>
+<button type="submit" class='trips_process' name="form_button" value="pysba">PySB ></button>
 <textarea class="pysb_div">
 {%- if pysb_model %}
 {{ pysb_model }}

@@ -32,10 +32,6 @@ class BelForm(Form):
 
 class IndraForm(Form):
     indra_list = SelectMultipleField('INDRA Statements', choices = [])
-    trips_select = SubmitField('>>')
-    reach_select = SubmitField('>>')
-    biopax_select = SubmitField('>>')
-    bel_select = SubmitField('>>')
     remove = SubmitField('Remove')
     select_all = SubmitField('Select all')
     select_none = SubmitField('Select none')
@@ -75,9 +71,22 @@ def run():
     stmts = []
     pysb_model = ''
     if request.method == 'POST':
-        stmts = form.statements_list.choices
-        print request.__dict__
-        button = request.form.get('form_button')
+        #stmts = form.statements_list.choices
+        if request.form.get('trips_process'):
+            print 'Trips process'
+            txt = request.form['trips_input']
+            stmts = get_statements(txt)
+            stmt_list = [(str(i), str(stmts[i])) for i in range(len(stmts))]
+            trips_form.statements_list.choices = stmt_list
+        elif request.form.get('reach_process'):
+            print 'Reach process'
+        elif request.form.get('biopax_process'):
+            print 'Biopax process'
+        elif request.form.get('bel_process'):
+            print 'BEL process'
+        else:
+            print 'Other'
+        '''
         if button == 'stmt':
             txt = form.trips_input.data
             if txt:
@@ -93,12 +102,12 @@ def run():
         else:
             stmts = None
             pysb_model = ''
+        '''
     args = {'trips_form': trips_form,
             'reach_form': reach_form,
             'biopax_form': biopax_form,
             'bel_form': bel_form,
             'indra_form': indra_form,
-            'statements': stmts,
             'pysb_model': pysb_model}
     return render_template('canvas.html', **args)
 

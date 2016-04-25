@@ -1,45 +1,33 @@
 <!doctype html>
 <html>
-    <head>
-        <style>
-        body {
-            background-color: linen;
-            }
-        .trips_process {
-            vertical-align: center;
-            }
-        .trips_textarea {
-            vertical-align: top;
-            width: 200px;
-            height: 100px;
-            }
-        .statements_list {
-            vertical-align: top;
-            width: 200px;
-            height: 100px;
-            }
-        .pysb_div {
-            vertical-align: top;
-            width: 300px;
-            height: 400px;
-            }
-        </style>
-    </head>
+<head>
+<link rel="stylesheet" href="{{ url_for('static', filename='canvas.css') }}">
+</head>
+
 <body>
 <h1>INDRA Web interface</h1>
+
+<div class="trips_panel">
+<form action="" method="POST" name="trips_form">
+{{ trips_form.trips_input(class_="trips_textarea") }}
+{{ trips_form.trips_process(class_="process_button") }}
+{{ trips_form.statements_list(class_="statements_list") }}
+</form>
+</div>
+
+<div class="indra_panel">
 <form action="" method="POST" name="indra_form">
-{{ form.trips_input(class_="trips_textarea") }}
-<button type="submit" class='trips_process' name="form_button" value="stmt">Statements ></button>
-{{ form.statements_list(class_="statements_list") }}
-<button type="submit" class='trips_process' name="form_button" value="pysba">PySB ></button>
+{{ indra_form.statements_list(class_="statements_list") }}
+</form>
+</div>
+
 <textarea class="pysb_div">
 {%- if pysb_model %}
 {{ pysb_model }}
 {%- else %}
 Result goes here
 {%- endif %}
-    </textarea>
-</form>
+</textarea>
 
 </body>
 </html>

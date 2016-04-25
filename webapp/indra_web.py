@@ -31,7 +31,13 @@ class BelForm(Form):
     statements_list = SelectMultipleField('BEL Statements', choices = [])
 
 class IndraForm(Form):
-    
+    statements_list = SelectMultipleField('INDRA Statements', choices = [])
+    remove = SubmitField('Remove')
+    select_all = SubmitField('Select all')
+    select_none = SubmitField('Select none')
+    pysb_assemble = SubmitField('PySB')
+    graph_assemble = SubmitField('Graph')
+    network_assemble = SubmitField('Network')
 
 def get_pysb_model(stmts):
     if stmts is not None:
@@ -57,7 +63,11 @@ txt = ''
 
 @app.route("/", methods=['POST', 'GET'])
 def run():
-    form = IndraForm(request.form)
+    trips_form = TripsForm(request.form)
+    reach_form = ReachForm(request.form)
+    biopax_form = BiopaxForm(request.form)
+    bel_form = BelForm(request.form)
+    indra_form = IndraForm(request.form)
     stmts = []
     pysb_model = ''
     if request.method == 'POST':
@@ -79,7 +89,8 @@ def run():
         else:
             stmts = None
             pysb_model = ''
-    args = {'form': form,
+    args = {'trips_form': trips_form,
+            'indra_form': indra_form,
             'statements': stmts,
             'pysb_model': pysb_model}
     return render_template('canvas.html', **args)

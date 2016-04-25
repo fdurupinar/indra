@@ -3,16 +3,35 @@ from indra.pysb_assembler import PysbAssembler
 from flask import Flask, render_template, request
 from wtforms import Form
 from wtforms.fields import StringField, SelectMultipleField
+from wtforms.fields import TextField, SubmitField
 from wtforms.widgets import TextArea
 
 from indra.statements import *
 
 app = Flask(__name__)
 
+class TripsForm(Form):
+    trips_input = StringField('TRIPS text', widget=TextArea())
+    trips_process = SubmitField('TRIPS process')
+    statements_list = SelectMultipleField('TRIPS Statements', choices = [])
+
+class ReachForm(Form):
+    reach_input = TextField('REACH PMID')
+    reach_process = SubmitField('REACH process')
+    statements_list = SelectMultipleField('REACH Statements', choices = [])
+
+class BiopaxForm(Form):
+    biopax_input = TextField('BioPax Genes')
+    biopax_process = SubmitField('BioPAX process')
+    statements_list = SelectMultipleField('BioPAX Statements', choices = [])
+
+class BelForm(Form):
+    bel_input = TextField('BEL Genes')
+    bel_process = SubmitField('BEL process')
+    statements_list = SelectMultipleField('BEL Statements', choices = [])
+
 class IndraForm(Form):
-    trips_input = StringField('TRIPS input', widget=TextArea())
-    reach_input = StringField('REACH input', widget=TextArea())
-    statements_list = SelectMultipleField('Statements', choices = [])
+    
 
 def get_pysb_model(stmts):
     if stmts is not None:

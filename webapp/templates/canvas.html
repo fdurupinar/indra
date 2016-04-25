@@ -5,22 +5,56 @@
 </head>
 
 <body>
+<div id="header">
 <h1>INDRA Web interface</h1>
+</div>
 
-<div class="trips_panel">
+<div id="input_panels">
+<div id="trips_panel" class="input_panel">
 <form action="" method="POST" name="trips_form">
-{{ trips_form.trips_input(class_="trips_textarea") }}
+{{ trips_form.trips_input }}
 {{ trips_form.trips_process(class_="process_button") }}
 {{ trips_form.statements_list(class_="statements_list") }}
+{{ indra_form.trips_select}}
 </form>
 </div>
-
-<div class="indra_panel">
+<div id="reach_panel" class="input_panel">
+<form action="" method="POST" name="reach_form">
+{{ reach_form.reach_input }}
+{{ reach_form.reach_process(class_="process_button") }}
+{{ reach_form.statements_list(class_="statements_list") }}
+{{ indra_form.reach_select}}
+</form>
+</div>
+<div id="biopax_panel" class="input_panel">
+<form action="" method="POST" name="biopax_form">
+{{ biopax_form.biopax_input }}
+{{ biopax_form.biopax_process(class_="process_button") }}
+{{ biopax_form.statements_list(class_="statements_list") }}
+{{ indra_form.biopax_select}}
+</form>
+</div>
+<div id="bel_panel" class="input_panel">
+<form action="" method="POST" name="bel_form">
+{{ bel_form.bel_input }}
+{{ bel_form.bel_process(class_="process_button") }}
+{{ bel_form.statements_list(class_="statements_list") }}
+{{ indra_form.bel_select}}
+</form>
+</div>
+</div>
+<div class="panel" id="indra_panel">
 <form action="" method="POST" name="indra_form">
-{{ indra_form.statements_list(class_="statements_list") }}
+{{ indra_form.indra_list(class_="statements_list") }}
+{{ indra_form.remove }}
+{{ indra_form.select_all }}
+{{ indra_form.select_none }}
+{{ indra_form.pysb_assemble }}
+{{ indra_form.graph_assemble }}
+{{ indra_form.network_assemble }}
 </form>
 </div>
-
+<div class="panel" id="model_panel">
 <textarea class="pysb_div">
 {%- if pysb_model %}
 {{ pysb_model }}
@@ -28,6 +62,7 @@
 Result goes here
 {%- endif %}
 </textarea>
+</div>
 
 </body>
 </html>

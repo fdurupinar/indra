@@ -12,32 +12,36 @@ app = Flask(__name__)
 
 class TripsForm(Form):
     trips_input = StringField('TRIPS text', widget=TextArea())
-    trips_process = SubmitField('TRIPS process')
+    trips_process = SubmitField('>>')
     statements_list = SelectMultipleField('TRIPS Statements', choices = [])
 
 class ReachForm(Form):
     reach_input = TextField('REACH PMID')
-    reach_process = SubmitField('REACH process')
+    reach_process = SubmitField('>>')
     statements_list = SelectMultipleField('REACH Statements', choices = [])
 
 class BiopaxForm(Form):
     biopax_input = TextField('BioPax Genes')
-    biopax_process = SubmitField('BioPAX process')
+    biopax_process = SubmitField('>>')
     statements_list = SelectMultipleField('BioPAX Statements', choices = [])
 
 class BelForm(Form):
     bel_input = TextField('BEL Genes')
-    bel_process = SubmitField('BEL process')
+    bel_process = SubmitField('>>')
     statements_list = SelectMultipleField('BEL Statements', choices = [])
 
 class IndraForm(Form):
-    statements_list = SelectMultipleField('INDRA Statements', choices = [])
+    indra_list = SelectMultipleField('INDRA Statements', choices = [])
+    trips_select = SubmitField('>>')
+    reach_select = SubmitField('>>')
+    biopax_select = SubmitField('>>')
+    bel_select = SubmitField('>>')
     remove = SubmitField('Remove')
     select_all = SubmitField('Select all')
     select_none = SubmitField('Select none')
-    pysb_assemble = SubmitField('PySB')
-    graph_assemble = SubmitField('Graph')
-    network_assemble = SubmitField('Network')
+    pysb_assemble = SubmitField('PySB >>')
+    graph_assemble = SubmitField('Graph >>')
+    network_assemble = SubmitField('Network >>')
 
 def get_pysb_model(stmts):
     if stmts is not None:
@@ -90,6 +94,9 @@ def run():
             stmts = None
             pysb_model = ''
     args = {'trips_form': trips_form,
+            'reach_form': reach_form,
+            'biopax_form': biopax_form,
+            'bel_form': bel_form,
             'indra_form': indra_form,
             'statements': stmts,
             'pysb_model': pysb_model}

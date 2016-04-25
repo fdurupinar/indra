@@ -1,21 +1,63 @@
 body {
     background-color: linen;
     }
-.trips_process {
-    vertical-align: center;
+#header {
+    text-align:center;
+    padding:5px;
     }
-.trips_textarea {
-    vertical-align: top;
+#input_panels {
+    float: left;
+    height: 800px;
+    }
+.input_panel {
+    height: 150px;
+    width: 500px;
+    padding: 5px;
+    }
+#trips_panel {
+    background-color:#f5ecce;
+    }
+#reach_panel {
+    background-color:#a9f5d0;
+    }
+#biopax_panel {
+    background-color:#f8e0e6;
+    }
+#bel_panel {
+    background-color:#e0e6f8;
+    }
+#indra_panel {
+    float: left;
+    height: 630px;
+    width: 300px;
+    padding: 5px;
+    background-color:#cccccc;
+    }
+#indra_list {
+    vertical-align: center;
+    width: 300px;
+    height: 600px;
+    }
+#model_panel {
+    float: left;
+    height: 150px;
+    width: 300px;
+    padding: 5px;
+    background-color:#eeeeee;
+    }
+#trips_input {
+    vertical-align: center;
     width: 200px;
     height: 100px;
     }
 .statements_list {
-    vertical-align: top;
+    position: relative;
+    top: 50%;
     width: 200px;
     height: 100px;
     }
 .pysb_div {
     vertical-align: top;
     width: 300px;
-    height: 400px;
+    height: 630px;
     }

@@ -516,8 +516,12 @@ class Statement(object):
         Statements that this Statement supports.
     supported_by : list of :py:class:`Statement`
         Statements supported by this statement.
+    is_direct : boolean
+        Whether the statement is direct (involves a physical interaction) or
+        indirect (involves other intermediate processes). Defaults to False.
     """
-    def __init__(self, evidence=None, supports=None, supported_by=None):
+    def __init__(self, evidence=None, supports=None, supported_by=None,
+                 is_direct=False):
         if evidence is None:
             self.evidence = []
         elif isinstance(evidence, Evidence):
@@ -531,6 +535,7 @@ class Statement(object):
         # Initialize supports/supported_by fields, which should be lists
         self.supports = supports if supports else []
         self.supported_by = supported_by if supported_by else []
+        self.is_direct = is_direct
 
     def matches(self, other):
         return self.matches_key() == other.matches_key()
@@ -590,8 +595,9 @@ class Modification(Statement):
     evidence : list of :py:class:`Evidence`
         Evidence objects in support of the modification.
     """
-    def __init__(self, enz, sub, residue=None, position=None, evidence=None):
-        super(Modification, self).__init__(evidence)
+    def __init__(self, enz, sub, residue=None, position=None, evidence=None,
+                 is_direct=False):
+        super(Modification, self).__init__(evidence, is_direct)
         self.enz = enz
         self.sub = sub
         self.residue = get_valid_residue(residue)
@@ -679,8 +685,9 @@ class SelfModification(Statement):
     evidence : list of :py:class:`Evidence`
         Evidence objects in support of the modification.
     """
-    def __init__(self, enz, residue=None, position=None, evidence=None):
-        super(SelfModification, self).__init__(evidence)
+    def __init__(self, enz, residue=None, position=None, evidence=None,
+                 is_direct=False):
+        super(SelfModification, self).__init__(evidence, is_direct)
         self.enz = enz
         self.residue = get_valid_residue(residue)
         if position is not None:
@@ -849,8 +856,8 @@ class Activation(Statement):
     >>> act = Activation(mek, 'kinase', erk, 'kinase', True)
     """
     def __init__(self, subj, subj_activity, obj, obj_activity, is_activation,
-                 evidence=None):
-        super(Activation, self).__init__(evidence)
+                 evidence=None, is_direct=False):
+        super(Activation, self).__init__(evidence, is_direct)
         self.subj = subj
         self.subj_activity = subj_activity
         self.obj = obj
@@ -921,7 +928,8 @@ class ActiveForm(Statement):
     is_active : bool
         Whether the conditions are activating (True) or inactivating (False).
     """
-    def __init__(self, agent, activity, is_active, evidence=None):
+    def __init__(self, agent, activity, is_active, evidence=None,
+                 is_direct=False):
         super(ActiveForm, self).__init__(evidence)
         self.agent = agent
         self.activity = activity
@@ -995,8 +1003,8 @@ class RasGef(Statement):
     >>> kras = Agent('KRAS')
     >>> rasgef = RasGef(sos, 'gef', kras)
     """
-    def __init__(self, gef, gef_activity, ras, evidence=None):
-        super(RasGef, self).__init__(evidence)
+    def __init__(self, gef, gef_activity, ras, evidence=None, is_direct=False):
+        super(RasGef, self).__init__(evidence, is_direct)
         self.gef = gef
         self.gef_activity = gef_activity
         self.ras = ras
@@ -1061,8 +1069,8 @@ class RasGap(Statement):
     >>> kras = Agent('KRAS')
     >>> rasgap = RasGap(rasa1, 'gap', kras)
     """
-    def __init__(self, gap, gap_activity, ras, evidence=None):
-        super(RasGap, self).__init__(evidence)
+    def __init__(self, gap, gap_activity, ras, evidence=None, is_direct=False):
+        super(RasGap, self).__init__(evidence, is_direct)
         self.gap = gap
         self.gap_activity = gap_activity
         self.ras = ras
@@ -1120,8 +1128,8 @@ class Complex(Statement):
     >>> raf1 = Agent('RAF1')
     >>> cplx = Complex([braf, raf1])
     """
-    def __init__(self, members, evidence=None):
-        super(Complex, self).__init__(evidence)
+    def __init__(self, members, evidence=None, is_direct=False):
+        super(Complex, self).__init__(evidence, is_direct)
         self.members = members
 
     def matches_key(self):

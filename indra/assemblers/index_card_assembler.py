@@ -156,10 +156,12 @@ def assemble_selfmodification(stmt):
         interaction['modifications'][0]['aa_code'] =  stmt.residue
 
     # If the statement is direct or there is no enzyme
-    if get_is_direct(stmt) or stmt.enz is None:
+    if get_is_direct(stmt):
         interaction['participant_a'] = get_participant(stmt.enz)
         interaction['participant_b'] = get_participant(stmt.enz)
         card.card['interaction'] = interaction
+    else:
+        return None
 
     return card
 

@@ -11,21 +11,24 @@ braf = Agent('BRAF', db_refs={'UP': 'P15056'})
 map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
 ev = Evidence(source_api='reach', text='BRAF phosphorylates MAP2K1.',
               pmid='22833081')
-stmt_phos = Phosphorylation(braf, map2k1, 'S', '222', evidence=ev)
+stmt_phos = Phosphorylation(braf, map2k1, 'S', '222', evidence=ev,
+                            is_direct=True)
 
 brafmut = Agent('BRAF', db_refs={'UP': 'P15056'},
                 mods=[ModCondition('phosphorylation', 'S', '596')],
                 mutations=[MutCondition('600', 'V', 'E')],
                 bound_conditions=[BoundCondition(Agent('BRAF'), True)])
-stmt_phos2 = Phosphorylation(brafmut, map2k1, evidence=ev)
-stmt_dephos = Dephosphorylation(brafmut, map2k1, evidence=ev)
+stmt_phos2 = Phosphorylation(brafmut, map2k1, evidence=ev, is_direct=True)
+stmt_dephos = Dephosphorylation(brafmut, map2k1, evidence=ev, is_direct=True)
 stmt_complex = Complex([Agent('HRAS', db_refs={'UP': 'P01112'}),
                         Agent('GTP', db_refs={'CHEBI': '57600'})],
-                        evidence=ev)
+                        evidence=ev, is_direct=True)
 ev2 = Evidence(source_api='reach', text='BRAF phosphorylates MAP2K1.',
                pmid='22833081', epistemics={'direct': False})
-stmt_phos_indirect = Phosphorylation(brafmut, map2k1, evidence=ev2)
-stmt_autophos = Autophosphorylation(brafmut, 'S', '564', evidence=ev)
+stmt_phos_indirect = Phosphorylation(brafmut, map2k1, evidence=ev2,
+                                     is_direct=True)
+stmt_autophos = Autophosphorylation(brafmut, 'S', '564', evidence=ev,
+                                    is_direct=True)
 
 def test_get_pmc_id():
     pmc_id = get_pmc_id(stmt_phos)

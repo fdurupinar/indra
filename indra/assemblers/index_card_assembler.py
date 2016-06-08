@@ -263,14 +263,9 @@ def get_is_direct(stmt):
     indicates a direct interatcion then we assume the interaction
     is direct. If there is no evidence for the interaction being indirect
     then we default to direct.'''
-    any_indirect = False
-    for ev in stmt.evidence:
-        if ev.epistemics.get('direct') is True:
-            return True
-        elif ev.epistemics.get('direct') is False:
-            # This guarantees that we have seen at least
-            # some evidence that the statement is indirect
-            any_indirect = True
-    if any_indirect:
+    if stmt.is_direct:
+        return True
+    elif stmt.supported_by:
+        return any([get_is_direct(s) for s in stmt.supported_by])
+    else:
         return False
-    return True

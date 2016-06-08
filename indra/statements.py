@@ -597,7 +597,8 @@ class Modification(Statement):
     """
     def __init__(self, enz, sub, residue=None, position=None, evidence=None,
                  is_direct=False):
-        super(Modification, self).__init__(evidence, is_direct)
+        super(Modification, self).__init__(evidence=evidence,
+                                           is_direct=is_direct)
         self.enz = enz
         self.sub = sub
         self.residue = get_valid_residue(residue)
@@ -687,7 +688,8 @@ class SelfModification(Statement):
     """
     def __init__(self, enz, residue=None, position=None, evidence=None,
                  is_direct=False):
-        super(SelfModification, self).__init__(evidence, is_direct)
+        super(SelfModification, self).__init__(evidence=evidence,
+                                               is_direct=is_direct)
         self.enz = enz
         self.residue = get_valid_residue(residue)
         if position is not None:
@@ -857,7 +859,8 @@ class Activation(Statement):
     """
     def __init__(self, subj, subj_activity, obj, obj_activity, is_activation,
                  evidence=None, is_direct=False):
-        super(Activation, self).__init__(evidence, is_direct)
+        super(Activation, self).__init__(evidence=evidence,
+                                         is_direct=is_direct)
         self.subj = subj
         self.subj_activity = subj_activity
         self.obj = obj
@@ -930,7 +933,8 @@ class ActiveForm(Statement):
     """
     def __init__(self, agent, activity, is_active, evidence=None,
                  is_direct=False):
-        super(ActiveForm, self).__init__(evidence)
+        super(ActiveForm, self).__init__(evidence=evidence,
+                                         is_direct=is_direct)
         self.agent = agent
         self.activity = activity
         self.is_active = is_active
@@ -1004,7 +1008,7 @@ class RasGef(Statement):
     >>> rasgef = RasGef(sos, 'gef', kras)
     """
     def __init__(self, gef, gef_activity, ras, evidence=None, is_direct=False):
-        super(RasGef, self).__init__(evidence, is_direct)
+        super(RasGef, self).__init__(evidence=evidence, is_direct=is_direct)
         self.gef = gef
         self.gef_activity = gef_activity
         self.ras = ras
@@ -1070,7 +1074,7 @@ class RasGap(Statement):
     >>> rasgap = RasGap(rasa1, 'gap', kras)
     """
     def __init__(self, gap, gap_activity, ras, evidence=None, is_direct=False):
-        super(RasGap, self).__init__(evidence, is_direct)
+        super(RasGap, self).__init__(evidence=evidence, is_direct=is_direct)
         self.gap = gap
         self.gap_activity = gap_activity
         self.ras = ras
@@ -1129,7 +1133,7 @@ class Complex(Statement):
     >>> cplx = Complex([braf, raf1])
     """
     def __init__(self, members, evidence=None, is_direct=False):
-        super(Complex, self).__init__(evidence, is_direct)
+        super(Complex, self).__init__(evidence=evidence, is_direct=is_direct)
         self.members = members
 
     def matches_key(self):

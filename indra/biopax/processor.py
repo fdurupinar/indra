@@ -96,7 +96,7 @@ class BiopaxProcessor(object):
                     continue
                 complexes = _get_combinations(members)
                 for c in complexes:
-                    self.statements.append(Complex(c, ev))
+                    self.statements.append(Complex(c, ev, is_direct=True))
 
     def get_phosphorylation(self, force_contains=None):
         """Extract INDRA Phosphorylation statements from the model.
@@ -248,7 +248,7 @@ class BiopaxProcessor(object):
                     monomer.mods = mods
                     if mods:
                         stmt = ActiveForm(monomer, activity, is_active,
-                                          evidence=ev)
+                                          evidence=ev, is_direct=True)
                         self.statements.append(stmt)
 
     @staticmethod
@@ -402,7 +402,7 @@ class BiopaxProcessor(object):
                     if m.mod_type  in ['active', 'inactive']:
                         # Skip activity as a modification state
                         continue
-                    stmt = (enz, sub, m.residue, m.position, ev)
+                    stmt = (enz, sub, m.residue, m.position, ev, True)
                     stmts.append(stmt)
         return stmts
 

@@ -170,24 +170,24 @@ class BelProcessor(object):
             if act_type == 'Kinase' and mod.startswith('Phosphorylation'):
                 self.statements.append(
                         Phosphorylation(enz, sub, residue, mod_pos,
-                                        evidence))
+                                        evidence, is_direct=True))
             elif act_type == 'Catalytic':
                 if mod == 'Hydroxylation':
                     self.statements.append(
                             Hydroxylation(enz, sub, residue, mod_pos,
-                                          evidence))
+                                          evidence, is_direct=True))
                 elif mod == 'Sumoylation':
                     self.statements.append(
                             Sumoylation(enz, sub, residue, mod_pos,
-                                        evidence))
+                                        evidence, is_direct=True))
                 elif mod == 'Acetylation':
                     self.statements.append(
                             Acetylation(enz, sub, residue, mod_pos,
-                                        evidence))
+                                        evidence, is_direct=True))
                 elif mod == 'Ubiquitination':
                     self.statements.append(
                             Ubiquitination(enz, sub, residue, mod_pos,
-                                           evidence))
+                                           evidence, is_direct=True))
                 else:
                     logger.warning("Unknown modification type!")
                     logger.warning("Activity: %s, Mod: %s, Mod_Pos: %s" %
@@ -234,7 +234,8 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    Dephosphorylation(phos, sub, residue, mod_pos, evidence))
+                    Dephosphorylation(phos, sub, residue, mod_pos,
+                                      evidence, is_direct=True))
 
     def get_composite_activating_mods(self):
         """Extract INDRA ActiveForm Statements with multiple mods from BEL."""
@@ -294,7 +295,8 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    ActiveForm(species, act_type, is_active, evidence))
+                    ActiveForm(species, act_type, is_active,
+                               evidence, is_direct=True))
 
     def get_activating_mods(self):
         """Extract INDRA ActiveForm Statements with a single mod from BEL."""
@@ -339,7 +341,8 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    ActiveForm(species, act_type, is_active, evidence))
+                    ActiveForm(species, act_type, is_active,
+                               evidence, is_direct=True))
 
     def get_complexes(self):
         """Extract INDRA Complex Statements from BEL."""
@@ -389,7 +392,8 @@ class BelProcessor(object):
                 logger.warning(msg)
             else:
                 self.statements.append(Complex(cmplx_list,
-                                               evidence=cmplx_ev[cmplx_id]))
+                                               evidence=cmplx_ev[cmplx_id],
+                                               is_direct=True))
 
     def get_activating_subs(self):
         """Extract INDRA ActiveForm Statements based on a mutation from BEL."""
@@ -452,7 +456,8 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    ActiveForm(enz, act_type, is_active, evidence))
+                    ActiveForm(enz, act_type, is_active,
+                               evidence, is_direct=True))
 
     def get_activation(self):
         """Extract INDRA Activation Statements from BEL."""
@@ -500,24 +505,27 @@ class BelProcessor(object):
                 self.statements.append(
                      RasGtpActivation(subj, subj_activity,
                                       obj, obj_activity, is_activation,
-                                      evidence))
+                                      evidence, is_direct=True))
             # If the object is a Ras-like GTPase, and the subject *increases*
             # its GtpBound activity, then the subject is a RasGEF
             elif obj_activity == 'gtpbound' and \
                  rel == 'increases':
                 self.statements.append(
-                        RasGef(subj, subj_activity, obj, evidence))
+                        RasGef(subj, subj_activity, obj,
+                               evidence, is_direct=True))
             # If the object is a Ras-like GTPase, and the subject *decreases*
             # its GtpBound activity, then the subject is a RasGAP
             elif obj_activity == 'gtpbound' and \
                  rel == 'decreases':
                 self.statements.append(
-                        RasGap(subj, subj_activity, obj, evidence))
+                        RasGap(subj, subj_activity, obj,
+                               evidence, is_direct=True))
             # Otherwise, create a generic Activity->Activity statement
             else:
                 self.statements.append(
                      Activation(subj, subj_activity,
-                                obj, obj_activity, is_activation, evidence))
+                                obj, obj_activity, is_activation,
+                                evidence, is_direct=True))
 
             """
             #print "--------------------------------"

@@ -69,6 +69,7 @@ class ReachProcessor(object):
         for r in res:
             modification_type = r.get('subtype')
             epistemics = self._get_epistemics(r)
+            is_direct = self._get_is_direct(r)
             if epistemics.get('negative'):
                 continue
             context = self._get_context(r)
@@ -107,7 +108,8 @@ class ReachProcessor(object):
             ev = Evidence(source_api='reach', text=sentence,
                           annotations=context, pmid=self.citation,
                           epistemics=epistemics)
-            args = [controller_agent, theme_agent, residue, pos, ev]
+            args = [controller_agent, theme_agent, residue, pos,
+                    ev, is_direct]
             # Other subtypes that exist but we don't handle:
             # methylation (not PTM), ribosylation, hydrolysis (not PTM)
             if modification_type == 'phosphorylation':
@@ -132,6 +134,7 @@ class ReachProcessor(object):
         res = self.tree.execute(qstr)
         for r in res:
             epistemics = self._get_epistemics(r)
+            is_direct = self._get_is_direct(r)
             if epistemics.get('negative'):
                 continue
             context = self._get_context(r)
@@ -145,7 +148,7 @@ class ReachProcessor(object):
             ev = Evidence(source_api='reach', text=sentence,
                           annotations=context, pmid=self.citation,
                           epistemics=epistemics)
-            self.statements.append(Complex(members, ev))
+            self.statements.append(Complex(members, ev, is_direct))
 
     def get_activation(self):
         """Extract INDRA Activation Statements."""
@@ -153,6 +156,7 @@ class ReachProcessor(object):
         res = self.tree.execute(qstr)
         for r in res:
             epistemics = self._get_epistemics(r)
+            is_direct = self._get_is_direct(r)
             if epistemics.get('negative'):
                 continue
             sentence = r['verbose-text']
@@ -185,7 +189,8 @@ class ReachProcessor(object):
             else:
                 is_activation = False
             st = Activation(controller_agent, 'activity',
-                            controlled_agent, 'activity', is_activation, ev)
+                            controlled_agent, 'activity', is_activation,
+                            ev, is_direct)
             self.statements.append(st)
 
     def _get_agent_from_entity(self, entity_id):
@@ -302,10 +307,14 @@ class ReachProcessor(object):
         hyp = event.get('is_hypothesis')
         if hyp is True:
             epistemics['hypothesis'] = True
+        return epistemics
+
+    @staticmethod
+    def _get_is_direct(event):
         if event.has_key('is_direct'):
             direct = event['is_direct']
-            epistemics['direct'] = direct
-        return epistemics
+            return direct
+        return False
 
     @staticmethod
     def _get_valid_name(txt):

@@ -140,7 +140,7 @@ class TripsProcessor(object):
             self.statements.append(Activation(activator_agent, activator_act,
                                               affected_agent, 'activity',
                                               is_activation=is_activation,
-                                              evidence=ev))
+                                              evidence=ev, is_direct=True))
 
     def get_activations_causal(self):
         """Extract causal Activation INDRA Statements."""
@@ -185,7 +185,7 @@ class TripsProcessor(object):
                     continue
                 st = Activation(factor_agent, 'activity',
                                 outcome_agent, 'activity', is_activation=True,
-                                evidence=[ev])
+                                evidence=[ev], is_direct=False)
                 self.statements.append(st)
             elif outcome_event_type.text == 'ONT::ACTIVITY':
                 agent_tag = outcome_event.find(".//*[@role=':AGENT']")
@@ -197,7 +197,7 @@ class TripsProcessor(object):
                     continue
                 st = Activation(factor_agent, 'activity',
                                 outcome_agent, 'activity', is_activation=True,
-                                evidence=[ev])
+                                evidence=[ev], is_direct=False)
                 self.statements.append(st)
 
     def get_activating_mods(self):
@@ -238,7 +238,7 @@ class TripsProcessor(object):
             sentence = self._get_evidence_text(event)
             ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id)
             self.statements.append(ActiveForm(affected_agent, 'active', True,
-                                              evidence=ev))
+                                              evidence=ev, is_direct=True))
             self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
 
     def get_complexes(self):
@@ -288,7 +288,8 @@ class TripsProcessor(object):
                 logger.debug('Complex with missing members')
                 continue
 
-            self.statements.append(Complex([agent1, agent2], evidence=ev))
+            self.statements.append(Complex([agent1, agent2],
+                                           evidence=ev, is_direct=True))
             self.extracted_events['ONT::BIND'].append(event.attrib['id'])
 
     def get_phosphorylation(self):
@@ -357,26 +358,26 @@ class TripsProcessor(object):
                 for m in mods:
                     self.statements.append(Transphosphorylation(enzyme_agent,
                                             m.residue, m.position,
-                                            evidence=ev))
+                                            evidence=ev, is_direct=True))
             # Dephosphorylation
             elif 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
                 for m in mods:
                     self.statements.append(Dephosphorylation(enzyme_agent,
                                             affected_agent,
                                             m.residue, m.position,
-                                            evidence=ev))
+                                            evidence=ev, is_direct=True))
             # Autophosphorylation
             elif enzyme_agent is not None and (enzyme_id == affected_id):
                 for m in mods:
                     self.statements.append(Autophosphorylation(enzyme_agent,
                                             m.residue, m.position,
-                                            evidence=ev))
+                                            evidence=ev, is_direct=True))
             elif affected_agent is not None and \
                 'ONT::MANNER-REFL' in [mt.text for mt in mod_types]:
                 for m in mods:
                     self.statements.append(Autophosphorylation(affected_agent,
                                             m.residue, m.position,
-                                            evidence=ev))
+                                            evidence=ev, is_direct=True))
             # Regular phosphorylation
             else:
                 if mods is None:
@@ -385,7 +386,7 @@ class TripsProcessor(object):
                     self.statements.append(Phosphorylation(enzyme_agent,
                                             affected_agent,
                                             m.residue, m.position,
-                                            evidence=ev))
+                                            evidence=ev, is_direct=True))
             self.extracted_events['ONT::PHOSPHORYLATION'].append(
                                                             event.attrib['id'])
 

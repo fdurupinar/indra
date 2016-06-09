@@ -81,13 +81,11 @@ def process_belrdf(rdf_str):
     bp.get_complexes()
     bp.get_activating_subs()
     bp.get_modifications()
-    bp.get_dephosphorylations()
     bp.get_activating_mods()
     bp.get_composite_activating_mods()
     bp.get_activation()
 
     # Print some output about the process
     bp.print_statement_coverage()
-    logger.debug("\n--- Converted INDRA Statements -------------")
     bp.print_statements()
     return bp

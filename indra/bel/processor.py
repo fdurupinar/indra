@@ -109,8 +109,8 @@ class BelProcessor(object):
     statements : list[indra.statement.Statements]
         A list of extracted INDRA Statements. This list should be used for
         assembly in INDRA.
-    all_stmts : list[str]
-        A list of all BEL statements, as strings, in the BEL model.
+    direct_stmts : list[str]
+        A list of all direct BEL statements, as strings, in the BEL model.
     converted_stmts : list[str]
         A list of all BEL statements, as strings, that were converted into
         INDRA Statements.
@@ -123,7 +123,7 @@ class BelProcessor(object):
     def __init__(self, g):
         self.g = g
         self.statements = []
-        self.all_stmts = []
+        self.direct_stmts = []
         self.converted_stmts = []
         self.degenerate_stmts = []
         self.indirect_stmts = []
@@ -132,10 +132,10 @@ class BelProcessor(object):
         """Extract INDRA Modification Statements from BEL."""
         q_phospho = prefixes + """
             SELECT ?enzName ?actType ?substrateName ?mod ?pos
-                   ?stmt ?enzyme ?substrate
+                   ?stmt ?enzyme ?substrate ?rel
             WHERE {
                 ?stmt a belvoc:Statement .
-                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+                ?stmt belvoc:hasRelationship ?rel .
                 ?stmt belvoc:hasSubject ?subject .
                 ?stmt belvoc:hasObject ?object .
                 ?subject a belvoc:AbundanceActivity .
@@ -150,13 +150,12 @@ class BelProcessor(object):
                 OPTIONAL { ?object belvoc:hasModificationPosition ?pos . }
             }
         """
-
-        # Now make the PySB for the phosphorylation
+        # Run the query
         res_phospho = self.g.query(q_phospho)
 
         for stmt in res_phospho:
-            evidence = self.get_evidence(stmt[5])
             # Parse out the elements of the query
+            evidence = self.get_evidence(stmt[5])
             enz = self.get_agent(stmt[0], stmt[6])
             act_type = name_from_uri(stmt[1])
             sub = self.get_agent(stmt[2], stmt[7])
@@ -164,30 +163,38 @@ class BelProcessor(object):
             residue = self._get_residue(mod)
             mod_pos = term_from_uri(stmt[4])
             stmt_str = strip_statement(stmt[5])
-            # Mark this as a converted statement
-            self.converted_stmts.append(stmt_str)
+            # Get the relationship (increases/decreases, etc.)
+            rel = term_from_uri(stmt[8])
+            if rel == 'DirectlyIncreases' or rel == 'DirectlyDecreases':
+                is_direct = True
+            else:
+                is_direct = False
 
-            if act_type == 'Kinase' and mod.startswith('Phosphorylation'):
-                self.statements.append(
-                        Phosphorylation(enz, sub, residue, mod_pos,
-                                        evidence, is_direct=True))
-            elif act_type == 'Catalytic':
+            # Build the INDRA statement
+            stmt = None
+            if act_type == 'Kinase' and mod.startswith('Phosphorylation') and \
+               (rel == 'DirectlyIncreases' or rel == 'Increases'):
+                stmt = Phosphorylation(enz, sub, residue, mod_pos,
+                                       evidence, is_direct=is_direct)
+            elif act_type == 'Phosphatase' and \
+                 mod.startswith('Phosphorylation') and \
+                 (rel == 'DirectlyDecreases' or rel == 'Decreases'):
+                stmt = Dephosphorylation(enz, sub, residue, mod_pos, evidence,
+                                         is_direct=is_direct)
+            elif act_type == 'Catalytic' and \
+                 (rel == 'DirectlyIncreases' or rel == 'Increases'):
                 if mod == 'Hydroxylation':
-                    self.statements.append(
-                            Hydroxylation(enz, sub, residue, mod_pos,
-                                          evidence, is_direct=True))
+                    stmt = Hydroxylation(enz, sub, residue, mod_pos,
+                                         evidence, is_direct=is_direct)
                 elif mod == 'Sumoylation':
-                    self.statements.append(
-                            Sumoylation(enz, sub, residue, mod_pos,
-                                        evidence, is_direct=True))
+                    stmt = Sumoylation(enz, sub, residue, mod_pos,
+                                       evidence, is_direct=is_direct)
                 elif mod == 'Acetylation':
-                    self.statements.append(
-                            Acetylation(enz, sub, residue, mod_pos,
-                                        evidence, is_direct=True))
+                    stmt = Acetylation(enz, sub, residue, mod_pos,
+                                       evidence, is_direct=is_direct)
                 elif mod == 'Ubiquitination':
-                    self.statements.append(
-                            Ubiquitination(enz, sub, residue, mod_pos,
-                                           evidence, is_direct=True))
+                    stmt = Ubiquitination(enz, sub, residue, mod_pos,
+                                          evidence, is_direct=is_direct)
                 else:
                     logger.warning("Unknown modification type!")
                     logger.warning("Activity: %s, Mod: %s, Mod_Pos: %s" %
@@ -196,46 +203,10 @@ class BelProcessor(object):
                 logger.warning("Unknown modification type!")
                 logger.warning("Activity: %s, Mod: %s, Mod_Pos: %s" %
                                (act_type, mod, mod_pos))
-
-    def get_dephosphorylations(self):
-        """Extract INDRA Dephosphorylation Statements from BEL."""
-        q_phospho = prefixes + """
-            SELECT ?phosName ?substrateName ?mod ?pos ?stmt
-                   ?phosphatase ?substrate
-            WHERE {
-                ?stmt a belvoc:Statement .
-                ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases .
-                ?stmt belvoc:hasSubject ?subject .
-                ?stmt belvoc:hasObject ?object .
-                ?subject belvoc:hasActivityType belvoc:Phosphatase .
-                ?subject belvoc:hasChild ?phosphatase .
-                ?phosphatase a belvoc:ProteinAbundance .
-                ?phosphatase belvoc:hasConcept ?phosName .
-                ?object a belvoc:ModifiedProteinAbundance .
-                ?object belvoc:hasModificationType ?mod .
-                ?object belvoc:hasChild ?substrate .
-                ?substrate belvoc:hasConcept ?substrateName .
-                OPTIONAL { ?object belvoc:hasModificationPosition ?pos . }
-            }
-        """
-
-        # Now make the PySB for the phosphorylation
-        res_phospho = self.g.query(q_phospho)
-
-        for stmt in res_phospho:
-            evidence = self.get_evidence(stmt[4])
-            # Parse out the elements of the query
-            phos = self.get_agent(stmt[0], stmt[5])
-            sub = self.get_agent(stmt[1], stmt[6])
-            mod = term_from_uri(stmt[2])
-            residue = self._get_residue(mod)
-            mod_pos = term_from_uri(stmt[3])
-            stmt_str = strip_statement(stmt[4])
-            # Mark this as a converted statement
-            self.converted_stmts.append(stmt_str)
-            self.statements.append(
-                    Dephosphorylation(phos, sub, residue, mod_pos,
-                                      evidence, is_direct=True))
+            # If we've matched a pattern, mark this as a converted statement
+            if stmt is not None:
+                self.statements.append(stmt)
+                self.converted_stmts.append(stmt_str)
 
     def get_composite_activating_mods(self):
         """Extract INDRA ActiveForm Statements with multiple mods from BEL."""
@@ -550,7 +521,7 @@ class BelProcessor(object):
     def get_all_direct_statements(self):
         """Get all directlyIncreases/Decreases BEL statements.
 
-        Stores the results of the query in self.all_stmts.
+        Stores the results of the query in self.direct_stmts.
         """
         logger.info("Getting all direct statements...\n")
         q_stmts = prefixes + """
@@ -598,7 +569,7 @@ class BelProcessor(object):
         """
 
         res_stmts = self.g.query(q_stmts)
-        self.all_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
+        self.direct_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
 
     def get_indirect_statements(self):
         """Get all indirect increases/decreases BEL statements.
@@ -680,7 +651,7 @@ class BelProcessor(object):
 
         Also prints how many are considered 'degenerate' and not converted."""
 
-        if not self.all_stmts:
+        if not self.direct_stmts:
             self.get_all_direct_statements()
         if not self.degenerate_stmts:
             self.get_degenerate_statements()
@@ -690,22 +661,24 @@ class BelProcessor(object):
         logger.info('')
         logger.info("Total indirect statements: %d" %
                      len(self.indirect_stmts))
-        logger.info("Total direct statements: %d" % len(self.all_stmts))
+        logger.info("Total direct statements: %d" % len(self.direct_stmts))
         logger.info("Converted statements: %d" % len(self.converted_stmts))
         logger.info("Degenerate statements: %d" % len(self.degenerate_stmts))
         logger.info(">> Total unhandled statements: %d" %
-                     (len(self.all_stmts) - len(self.converted_stmts) -
-                     len(self.degenerate_stmts)))
+                     ((len(self.direct_stmts) + len(self.indirect_stmts)) -
+                      (len(self.converted_stmts) + len(self.degenerate_stmts))))
 
         logger.info('')
         logger.info("--- Unhandled statements ---------")
-        for stmt in self.all_stmts:
+        for stmt in (self.direct_stmts + self.indirect_stmts):
             if not (stmt in self.converted_stmts or
                     stmt in self.degenerate_stmts):
                 logger.info(stmt)
+        logger.info('')
 
     def print_statements(self):
         """Print all extracted INDRA Statements."""
+        logger.info("--- Converted INDRA Statements -------------")
         for i, stmt in enumerate(self.statements):
             logger.info("%s: %s" % (i, stmt))
 

@@ -1,5 +1,6 @@
-from indra import trips
+from indra import trips, reach, biopax, bel
 from indra.assemblers import PysbAssembler
+from indra.assemblers import GraphAssembler
 from indra.statements import Statement
 from flask import Flask, render_template, request
 from wtforms import Form
@@ -21,16 +22,19 @@ class ReachForm(Form):
     reach_input = TextField('REACH PMID')
     reach_process = SubmitField('>>')
     reach_stmts = SelectMultipleField('REACH Statements', choices = [])
+    reach_select = SubmitField('>>')
 
 class BiopaxForm(Form):
     biopax_input = TextField('BioPax Genes')
     biopax_process = SubmitField('>>')
     biopax_stmts = SelectMultipleField('BioPAX Statements', choices = [])
+    biopax_select = SubmitField('>>')
 
 class BelForm(Form):
     bel_input = TextField('BEL Genes')
     bel_process = SubmitField('>>')
     bel_stmts = SelectMultipleField('BEL Statements', choices = [])
+    bel_select = SubmitField('>>')
 
 class IndraForm(Form):
     indra_stmts = SelectMultipleField('INDRA Statements', choices = [])
@@ -39,7 +43,6 @@ class IndraForm(Form):
     select_none = SubmitField('Select none')
     pysb_assemble = SubmitField('PySB >>')
     graph_assemble = SubmitField('Graph >>')
-    network_assemble = SubmitField('Network >>')
 
 def get_pysb_model(stmts):
     if stmts is not None:
@@ -50,15 +53,24 @@ def get_pysb_model(stmts):
     else:
         return 'Blank model'
 
-def get_statements(txt):
-    stmts = [Complex([Agent('A'), Agent('B')]), Complex([Agent('C'), Agent('D')])]
-    return stmts
-
+def trips_process_text(txt):
     tp = trips.process_text(txt)
     if tp is not None:
         return tp.statements
+    return None
+
+def biopax_process_neighborhood(genes_str):
+    genes = genes_str.split(',')
+    genes = [g.strip() for g in genes]
+    if len(genes) == 1:
+        bp = biopax.process_pc_neighborhood(genes)
     else:
-        return None
+        bp = biopax.process_pc_pathsbetween(genes)
+    if bp is not None:
+        bp.get_phosphorylation()
+        bp.get_dephosphorylation()
+        return bp.statements
+    return None
 
 def get_stmt_list(stmts):
     list_choices = []
@@ -68,14 +80,23 @@ def get_stmt_list(stmts):
     return list_choices
 
 global trips_stmts
+global trips_txt
 global indra_stmts
+global biopax_stmts
+global biopax_txt
 trips_stmts = []
+trips_txt = ''
 indra_stmts = []
+biopax_stmts = []
+biopax_txt = ''
 
 @app.route("/", methods=['POST', 'GET'])
 def run():
     global trips_stmts
+    global trips_txt
     global indra_stmts
+    global biopax_stmts
+    global biopax_txt
     print trips_stmts
     trips_form = TripsForm(request.form)
     reach_form = ReachForm(request.form)
@@ -85,27 +106,36 @@ def run():
     pysb_model = ''
     print request.form
     print trips_form.data
+    print indra_form.data
     if request.method == 'POST':
         #stmts = form.statements_list.choices
         if request.form.get('trips_process'):
             print 'Trips process'
-            txt = request.form['trips_input']
-            trips_stmts = get_statements(txt)
+            trips_txt = request.form['trips_input']
+            trips_stmts = trips_process_text(trips_txt)
             trips_stmts_list = get_stmt_list(trips_stmts)
-        if request.form.get('trips_select'):
-            indra_stmts = trips_stmts
-        if request.form.get('reach_process'):
+        elif request.form.get('trips_select'):
+            indra_stmts += trips_stmts
+        elif request.form.get('reach_process'):
             print 'Reach process'
         elif request.form.get('biopax_process'):
-            print 'Biopax process'
+            biopax_txt = biopax_form.data.get('biopax_input')
+            biopax_stmts = biopax_process_neighborhood(biopax_txt)
+        elif request.form.get('biopax_select'):
+            indra_stmts += biopax_stmts
         elif request.form.get('bel_process'):
-            print 'BEL process'
+            genes = bel_form.data.get('bel_input')
         elif request.form.get('pysb_assemble'):
             print indra_stmts
             pysb_model = get_pysb_model(indra_stmts)
+        elif request.form.get('remove'):
+            stmts_to_remove = indra_form.data.get('indra_stmts')
         else:
             print 'Other'
         trips_form.trips_stmts.choices = get_stmt_list(trips_stmts)
+        trips_form.trips_input.data = trips_txt
+        biopax_form.biopax_stmts.choices = get_stmt_list(biopax_stmts)
+        biopax_form.biopax_input.data = biopax_txt
         indra_form.indra_stmts.choices = get_stmt_list(indra_stmts)
     args = {'trips_form': trips_form,
             'reach_form': reach_form,

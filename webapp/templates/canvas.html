@@ -26,7 +26,7 @@
 {{ reach_form.reach_input }}
 {{ reach_form.reach_process(class_="process_button") }}
 {{ reach_form.reach_stmts(class_="statements_list") }}
-<button type="button" id="reach_select">>></button>
+{{ reach_form.reach_select(class_="process_button") }}
 </form>
 </div>
 
@@ -35,7 +35,7 @@
 {{ biopax_form.biopax_input }}
 {{ biopax_form.biopax_process(class_="process_button") }}
 {{ biopax_form.biopax_stmts(class_="statements_list") }}
-<button type="button" id="biopax_select">>></button>
+{{ biopax_form.biopax_select(class_="process_button") }}
 </form>
 </div>
 
@@ -44,7 +44,7 @@
 {{ bel_form.bel_input }}
 {{ bel_form.bel_process(class_="process_button") }}
 {{ bel_form.bel_stmts(class_="statements_list") }}
-<button type="button" id="bel_select">>></button>
+{{ bel_form.bel_select(class_="process_button") }}
 </form>
 </div>
 </div>
@@ -57,7 +57,6 @@
 {{ indra_form.select_none }}
 {{ indra_form.pysb_assemble }}
 {{ indra_form.graph_assemble }}
-{{ indra_form.network_assemble }}
 </form>
 </div>
 

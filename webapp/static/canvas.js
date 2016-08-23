@@ -1,3 +1,3 @@
-document.getElementById("trips_select").onclick = function() {
-    document.getElementById("trips_select").value = "<<"
+document.getElementById("select_all").onclick = function() {
+    
     };

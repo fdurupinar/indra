@@ -53,8 +53,8 @@
 <form action="" method="POST" name="indra_form">
 {{ indra_form.indra_stmts(class_="statements_list") }}
 {{ indra_form.remove }}
-{{ indra_form.select_all }}
-{{ indra_form.select_none }}
+<button type="button" id="select_all" onclick="select_all_fn()">Select all</button>
+<button type="button" id="select_none" onclick="select_none_fn()">Select none</button>
 {{ indra_form.pysb_assemble }}
 {{ indra_form.graph_assemble }}
 </form>

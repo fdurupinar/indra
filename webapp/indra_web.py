@@ -39,8 +39,6 @@ class BelForm(Form):
 class IndraForm(Form):
     indra_stmts = SelectMultipleField('INDRA Statements', choices = [])
     remove = SubmitField('Remove')
-    select_all = SubmitField('Select all')
-    select_none = SubmitField('Select none')
     pysb_assemble = SubmitField('PySB >>')
     graph_assemble = SubmitField('Graph >>')
 
@@ -151,7 +149,6 @@ def run():
     if request.method == 'POST':
         #stmts = form.statements_list.choices
         if request.form.get('trips_process'):
-            print 'Trips process'
             trips_txt = trips_form.data.get('trips_input')
             trips_stmts = trips_process_text(trips_txt)
             trips_stmts_list = get_stmt_list(trips_stmts)

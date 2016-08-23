@@ -1,4 +1,4 @@
-from indra import trips, reach, biopax, bel
+from indra import trips, reach, biopax, bel, literature
 from indra.assemblers import PysbAssembler
 from indra.assemblers import GraphAssembler
 from indra.statements import Statement
@@ -59,6 +59,19 @@ def trips_process_text(txt):
         return tp.statements
     return None
 
+def reach_process_pmid(pmid):
+    pmid = pmid.strip()
+    txt, txt_format = literature.get_full_text(pmid, 'pmid')
+    if txt_format == 'nxml':
+        rp = reach.process_nxml_str(txt)
+    elif txt_format in ('txt', 'abstract'):
+        rp = reach.process_text(txt)
+    else:
+        return None
+    if rp is not None:
+        return rp.statements
+    return None
+
 def biopax_process_neighborhood(genes_str):
     genes = genes_str.split(',')
     genes = [g.strip() for g in genes]
@@ -89,13 +102,17 @@ def get_stmt_list(stmts):
 
 global trips_stmts
 global trips_txt
-global indra_stmts
+global reach_stmts
+global reach_txt
 global biopax_stmts
 global biopax_txt
 global bel_stmts
 global bel_txt
+global indra_stmts
 trips_stmts = []
 trips_txt = ''
+reach_stmts = []
+reach_txt = ''
 indra_stmts = []
 biopax_stmts = []
 biopax_txt = ''
@@ -106,11 +123,13 @@ bel_txt = ''
 def run():
     global trips_stmts
     global trips_txt
-    global indra_stmts
+    global reach_stmts
+    global reach_txt
     global biopax_stmts
     global biopax_txt
     global bel_stmts
     global bel_txt
+    global indra_stmts
     trips_form = TripsForm(request.form)
     reach_form = ReachForm(request.form)
     biopax_form = BiopaxForm(request.form)
@@ -128,7 +147,9 @@ def run():
             trips_stmts = trips_process_text(trips_txt)
             trips_stmts_list = get_stmt_list(trips_stmts)
         elif request.form.get('reach_process'):
-            print 'Reach process'
+            reach_txt = reach_form.data.get('reach_input')
+            reach_stmts = reach_process_pmid(reach_txt)
+            reach_stmts_list = get_stmt_list(reach_stmts)
         elif request.form.get('biopax_process'):
             biopax_txt = biopax_form.data.get('biopax_input')
             biopax_stmts = biopax_process_neighborhood(biopax_txt)
@@ -137,6 +158,8 @@ def run():
             bel_stmts = bel_process_neighborhood(bel_txt)
         elif request.form.get('trips_select'):
             indra_stmts += trips_stmts
+        elif request.form.get('reach_select'):
+            indra_stmts += reach_stmts
         elif request.form.get('biopax_select'):
             indra_stmts += biopax_stmts
         elif request.form.get('bel_select'):
@@ -150,6 +173,8 @@ def run():
             print 'Other'
         trips_form.trips_stmts.choices = get_stmt_list(trips_stmts)
         trips_form.trips_input.data = trips_txt
+        reach_form.reach_stmts.choices = get_stmt_list(reach_stmts)
+        reach_form.reach_input.data = reach_txt
         biopax_form.biopax_stmts.choices = get_stmt_list(biopax_stmts)
         biopax_form.biopax_input.data = biopax_txt
         bel_form.bel_stmts.choices = get_stmt_list(bel_stmts)

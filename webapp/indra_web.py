@@ -53,6 +53,15 @@ def get_pysb_model(stmts):
     else:
         return 'Blank model'
 
+def get_graph_model(stmts):
+    if stmts is not None:
+        ga = GraphAssembler()
+        ga.add_statements(stmts)
+        ga.make_model()
+        return ga.get_string()
+    else:
+        return 'Blank model'
+
 def trips_process_text(txt):
     tp = trips.process_text(txt)
     if tp is not None:
@@ -135,7 +144,7 @@ def run():
     biopax_form = BiopaxForm(request.form)
     bel_form = BelForm(request.form)
     indra_form = IndraForm(request.form)
-    pysb_model = ''
+    model = ''
     print request.form
     print trips_form.data
     print indra_form.data
@@ -165,8 +174,9 @@ def run():
         elif request.form.get('bel_select'):
             indra_stmts += bel_stmts
         elif request.form.get('pysb_assemble'):
-            print indra_stmts
-            pysb_model = get_pysb_model(indra_stmts)
+            model = get_pysb_model(indra_stmts)
+        elif request.form.get('graph_assemble'):
+            model = get_graph_model(indra_stmts)
         elif request.form.get('remove'):
             stmts_to_remove = indra_form.data.get('indra_stmts')
         else:
@@ -185,7 +195,7 @@ def run():
             'biopax_form': biopax_form,
             'bel_form': bel_form,
             'indra_form': indra_form,
-            'pysb_model': pysb_model}
+            'pysb_model': model}
     return render_template('canvas.html', **args)
 
 if __name__ == "__main__":

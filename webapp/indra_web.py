@@ -72,6 +72,14 @@ def biopax_process_neighborhood(genes_str):
         return bp.statements
     return None
 
+def bel_process_neighborhood(genes_str):
+    genes = genes_str.split(',')
+    genes = [g.strip() for g in genes]
+    bp = bel.process_ndex_neighborhood(genes)
+    if bp is not None:
+        return bp.statements
+    return None
+
 def get_stmt_list(stmts):
     list_choices = []
     for i, st in enumerate(stmts):
@@ -84,11 +92,15 @@ global trips_txt
 global indra_stmts
 global biopax_stmts
 global biopax_txt
+global bel_stmts
+global bel_txt
 trips_stmts = []
 trips_txt = ''
 indra_stmts = []
 biopax_stmts = []
 biopax_txt = ''
+bel_stmts = []
+bel_txt = ''
 
 @app.route("/", methods=['POST', 'GET'])
 def run():
@@ -97,7 +109,8 @@ def run():
     global indra_stmts
     global biopax_stmts
     global biopax_txt
-    print trips_stmts
+    global bel_stmts
+    global bel_txt
     trips_form = TripsForm(request.form)
     reach_form = ReachForm(request.form)
     biopax_form = BiopaxForm(request.form)
@@ -111,20 +124,23 @@ def run():
         #stmts = form.statements_list.choices
         if request.form.get('trips_process'):
             print 'Trips process'
-            trips_txt = request.form['trips_input']
+            trips_txt = trips_form.data.get('trips_input')
             trips_stmts = trips_process_text(trips_txt)
             trips_stmts_list = get_stmt_list(trips_stmts)
-        elif request.form.get('trips_select'):
-            indra_stmts += trips_stmts
         elif request.form.get('reach_process'):
             print 'Reach process'
         elif request.form.get('biopax_process'):
             biopax_txt = biopax_form.data.get('biopax_input')
             biopax_stmts = biopax_process_neighborhood(biopax_txt)
+        elif request.form.get('bel_process'):
+            bel_txt = bel_form.data.get('bel_input')
+            bel_stmts = bel_process_neighborhood(bel_txt)
+        elif request.form.get('trips_select'):
+            indra_stmts += trips_stmts
         elif request.form.get('biopax_select'):
             indra_stmts += biopax_stmts
-        elif request.form.get('bel_process'):
-            genes = bel_form.data.get('bel_input')
+        elif request.form.get('bel_select'):
+            indra_stmts += bel_stmts
         elif request.form.get('pysb_assemble'):
             print indra_stmts
             pysb_model = get_pysb_model(indra_stmts)
@@ -136,6 +152,8 @@ def run():
         trips_form.trips_input.data = trips_txt
         biopax_form.biopax_stmts.choices = get_stmt_list(biopax_stmts)
         biopax_form.biopax_input.data = biopax_txt
+        bel_form.bel_stmts.choices = get_stmt_list(bel_stmts)
+        bel_form.bel_input.data = bel_txt
         indra_form.indra_stmts.choices = get_stmt_list(indra_stmts)
     args = {'trips_form': trips_form,
             'reach_form': reach_form,

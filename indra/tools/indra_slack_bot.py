@@ -2,6 +2,7 @@ import sys
 import time
 import json
 import indra
+from indra.assemblers import EnglishAssembler
 import logging
 from slackclient import SlackClient
 
@@ -76,6 +77,23 @@ def send_message(sc, channel, msg):
     logger.info('Message sent - [%s]: %s' %
                 (channel_name, msg))
 
+def test_stmt_question():
+    from indra.statements import Agent, Phosphorylation, Evidence
+    ev = Evidence('reach', pmid='27696220',
+                  text='We found that MEK phosphorylates ERK.')
+    stmt = Phosphorylation(Agent('MEK'), Agent('ERK'), evidence=ev)
+    if not stmt.evidence:
+        return None
+    ev = stmt.evidence[0]
+    ea = EnglishAssembler()
+    ea.add_statements([stmt])
+    sentence = ea.make_model()
+    msg = 'Based on the sentence ```%s``` ' % ev.text
+    msg += 'from https://www.ncbi.nlm.nih.gov/pubmed/%s,' % ev.pmid
+    msg += ' I learned that ```%s``` ' % sentence
+    msg += 'Is this statement correct? [yes/no/skip]'
+    return msg
+
 if __name__ == '__main__':
     token = read_slack_token()
     if not token:
@@ -91,8 +109,8 @@ if __name__ == '__main__':
             res = read_message(sc)
             if res:
                 (channel, username, msg) = res
-                if msg[0:8] == 'indrabot':
-                    reply = username + ' just said: ' + '"' + msg + '"'
+                if msg.startswith('indrabot'):
+                    reply = '%s just said ```%s```' % (username, msg)
                     send_message(sc, channel, reply)
         except KeyboardInterrupt:
             logger.info('Shutting down due to keyboard interrupt.')

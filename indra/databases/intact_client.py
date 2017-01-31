@@ -12,8 +12,16 @@ def parse_value(value):
         num, exponent = res.groups()
         rate_constant = float(num) * 10**float(exponent) * M
         return rate_constant
-
+    # Kd
     # Pattern 2 example: 1.5x10^-6 ~0.5(molar)
+    # could extract uncertainty following '~'
+    # r'([0-9]+\.[0-9]+)x10\^([-]?[^ ]+).+~(.+)\(molar\)'
+    pattern = r'([0-9]+\.[0-9]+)x10\^([-]?[^ ]+).*\(molar\)'
+    res = re.match(pattern, value)
+    if res:
+        num, exponent = resgroups()
+        rate_constant = float(num) * 10**float(exponent) * M
+        return rate_constant
     # Pattern 3 example: 23.2x10^-6(mol)
     # Pattern 4 example: 0.76(second -1)
     # Pattern 5 example: 1.9x10^6 ~0.03(per mole per second)

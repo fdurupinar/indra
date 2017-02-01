@@ -15,6 +15,7 @@ class BeliefEngine(object):
                 'trips': 0.4,
                 'reach': 0.3,
                 'biogrid': 0.01,
+                'intact': 0.01,
                 'assertion': 0.0
                 },
             'syst': {
@@ -23,6 +24,7 @@ class BeliefEngine(object):
                 'trips': 0.2,
                 'reach': 0.0,
                 'biogrid': 0.01,
+                'intact': 0.01,
                 'assertion': 0.0
                 }
             }

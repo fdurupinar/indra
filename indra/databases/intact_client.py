@@ -1,10 +1,20 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import re
 import json
+import pandas
 from sympy.physics import units
+from indra.statements import Agent, Complex, Evidence
+from indra.databases import uniprot_client, hgnc_client
 
 M = units.moles / units.liter
 mol = units.moles
 second = units.second
+
+def read_table():
+    fname = '../resources/intact.csv'
+    df = pandas.read_csv(fname, index_col=None)
+    return df
 
 def parse_value(value):
     # Kd
@@ -58,6 +68,18 @@ def parse_value(value):
     print('Could not parse %s' % value)
     return None
 
+def get_agent_from_up(up_id):
+    gene_name = uniprot_client.get_gene_name(up_id)
+    if not gene_name:
+        return None
+    db_refs = {'UP': up_id}
+    if uniprot_client.is_human(up_id):
+        hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+        if hgnc_id:
+            db_refs['HGNC'] = hgnc_id
+    agent = Agent(gene_name, db_refs=db_refs)
+    return agent
+
 def parse_entry(entry):
     parts = entry.split('|')
     rates = {}
@@ -68,12 +90,35 @@ def parse_entry(entry):
             rates[prefix] = rate_constant
     return rates
 
+def get_complexes(df):
+    stmts = []
+    for _, row in df.iterrows():
+        a = row['#ID(s) interactor A'].decode('utf-8')
+        b = row['ID(s) interactor B'].decode('utf-8')
+        params = row['Interaction parameter(s)']
+        if params != '-':
+            rates = parse_entry(params)
+        else:
+            rates = {}
+        if a.startswith('uniprotkb:'):
+            a_id = a[10:].split('-')[0]
+        else:
+            continue
+        if b.startswith('uniprotkb:'):
+            b_id = b[10:].split('-')[0]
+        else:
+            continue
+        agent_a = get_agent_from_up(a_id)
+        agent_b = get_agent_from_up(b_id)
+        ev = Evidence(source_api='intact')
+        if rates:
+            ev.annotations = {'kinetics': rates}
+        if agent_a is None or agent_b is None:
+            continue
+        st = Complex([agent_a, agent_b], evidence=[ev])
+        stmts.append(st)
+    return stmts
 
 if __name__ == '__main__':
-    with open('parameters.json', 'r') as fh:
-        all_entries = json.load(fh)
-    prefixes = set()
-    for entry in all_entries:
-        rates = parse_entry(entry)
-        if rates:
-            print(rates)
+    df = read_table()
+    stmts = get_complexes(df)

@@ -3,8 +3,11 @@ import json
 from sympy.physics import units
 
 M = units.moles / units.liter
+mol = units.moles
+second = units.second
 
 def parse_value(value):
+    # Kd
     # Pattern 1 example: 31.0x10^-6(molar)
     pattern = r'([0-9]+\.[0-9]+)x10\^([-]?[^ ]+)\(molar\)'
     res = re.match(pattern, value)
@@ -19,12 +22,38 @@ def parse_value(value):
     pattern = r'([0-9]+\.[0-9]+)x10\^([-]?[^ ]+).*\(molar\)'
     res = re.match(pattern, value)
     if res:
-        num, exponent = resgroups()
+        num, exponent = res.groups()
         rate_constant = float(num) * 10**float(exponent) * M
         return rate_constant
     # Pattern 3 example: 23.2x10^-6(mol)
+    # 'mol' unit is incorrect and changed to M
+    pattern = r'([0-9]+\.[0-9]+)x10\^([-]?[^ ]+)\(mol\)'
+    res = re.match(pattern, value)
+    if res:
+        num, exponent = res.groups()
+        rate_constant = float(num) * 10**float(exponent) * M
+        return rate_constant
     # Pattern 4 example: 0.76(second -1)
-    # Pattern 5 example: 1.9x10^6 ~0.03(per mole per second)
+    pattern = r'(\d+\.\d*)\(second -1\)'
+    res = re.match(pattern, value)
+    if res:
+        num = res.groups()[0]
+        rate_constant = float(num) / second
+        return rate_constant
+    # Pattern 5 example: 4.1x10^-2 ~0.03(second -1)
+    pattern = r'([0-9]+\.[0-9]+)x10\^([-]?[^ ]+)\s~\d+.{0,1}\d*\(second -1\)'
+    res = re.match(pattern, value)
+    if res:
+        num, exponent = res.groups()
+        rate_constant = (float(num) * 10**float(exponent)) / second
+        return rate_constant
+    # Pattern  example: 4.1x10^-2 ~0.03(second -1)
+    pattern = r'([0-9]+\.[0-9]+)x10\^([-]?[^ ]+)\s~\d+.{0,1}\d*\(per mole per second\)'
+    res = re.match(pattern, value)
+    if res:
+        num, exponent = res.groups()
+        rate_constant = (float(num) * 10**float(exponent)) / (mol * second)
+        return rate_constant
 
     print('Could not parse %s' % value)
     return None
